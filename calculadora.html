@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vol. Obra">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<title>Calculadora de Obra</title>
+<style>
+
+  :root{
+    --azul-950:#0e2233;
+    --azul-800:#173c56;
+    --azul-700:#1f4e6e;
+    --azul-500:#2f6f93;
+    --azul-300:#7fa9c0;
+    --gris-100:#eef1f4;
+    --gris-200:#dde3e8;
+    --gris-400:#9aa7b0;
+    --gris-600:#5c6b73;
+    --gris-800:#2b343a;
+    --papel:#f6f7f9;
+    --ok:#2f6f93;
+    --warn:#b3492f;
+    --mono: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  html,body{
+    margin:0;
+    min-height:100vh;
+    background:var(--gris-100);
+    background-image:
+      linear-gradient(var(--gris-200) 1px, transparent 1px),
+      linear-gradient(90deg, var(--gris-200) 1px, transparent 1px);
+    background-size:22px 22px;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color:var(--gris-800);
+  }
+
+  .wrap{
+    max-width:460px;
+    margin:0 auto;
+    padding:18px 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    padding:6px 2px 16px;
+    text-align:center;
+  }
+  header .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--azul-500);
+    font-weight:700;
+  }
+  header h1{
+    margin:4px 0 0;
+    font-size:22px;
+    font-weight:800;
+    color:var(--azul-950);
+    letter-spacing:-.01em;
+  }
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex;
+    gap:6px;
+    background:var(--gris-200);
+    padding:4px;
+    border-radius:12px;
+    margin-bottom:16px;
+  }
+  .tab{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:10px 4px;
+    border-radius:9px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--gris-600);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .tab.activo{
+    background:var(--azul-950);
+    color:#fff;
+  }
+
+  /* ---------- card ---------- */
+  .card{
+    background:#fff;
+    border-radius:16px;
+    padding:22px 20px 20px;
+    box-shadow:0 1px 2px rgba(14,34,51,.06), 0 8px 24px rgba(14,34,51,.07);
+    border-top:3px solid var(--azul-950);
+    display:none;
+  }
+  .card.activo{ display:block; }
+
+  .card-title{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .card-title h2{
+    margin:0;
+    font-size:17px;
+    font-weight:800;
+    color:var(--azul-950);
+  }
+  .card-title span{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--gris-400);
+  }
+
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--gris-600);
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    margin:14px 0 6px;
+  }
+  label:first-of-type{ margin-top:0; }
+
+  .fila-doble{
+    display:flex;
+    gap:10px;
+  }
+  .fila-doble > div{ flex:1; }
+
+  input[type="number"]{
+    width:100%;
+    padding:12px 12px;
+    border:1.5px solid var(--gris-200);
+    border-radius:10px;
+    font-size:19px;
+    font-family:var(--mono);
+    font-weight:600;
+    color:var(--azul-950);
+    background:var(--papel);
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  input[type="number"]:focus{ border-color:var(--azul-500); }
+  input[type="number"]::placeholder{ color:var(--gris-400); font-weight:400; }
+
+  /* toggle de unidades */
+  .unidades{
+    display:flex;
+    background:var(--gris-100);
+    border-radius:10px;
+    padding:3px;
+    margin:14px 0 4px;
+  }
+  .unidades button{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:9px 4px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--gris-600);
+    cursor:pointer;
+  }
+  .unidades button.activo{
+    background:var(--azul-950);
+    color:#fff;
+  }
+
+  .botones{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  button.accion{
+    flex:1;
+    padding:13px;
+    border:none;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:700;
+    color:#fff;
+    cursor:pointer;
+  }
+  .calcular{ background:var(--azul-950); }
+  .calcular:active{ background:var(--azul-800); }
+  .limpiar{ background:var(--gris-400); }
+  .limpiar:active{ background:var(--gris-600); }
+
+  /* ---------- resultado ---------- */
+  .resultado{
+    margin-top:20px;
+    text-align:center;
+    padding:16px 10px;
+    background:var(--papel);
+    border-radius:12px;
+    border:1.5px dashed var(--gris-200);
+  }
+  .resultado .valor{
+    font-family:var(--mono);
+    font-size:26px;
+    font-weight:800;
+    color:var(--azul-950);
+    min-height:32px;
+  }
+  .resultado .formula{
+    margin-top:4px;
+    font-size:12px;
+    color:var(--gris-400);
+    font-family:var(--mono);
+  }
+
+  .error{
+    color:var(--warn);
+    font-size:13px;
+    font-weight:600;
+    text-align:center;
+    margin-top:12px;
+    min-height:16px;
+  }
+
+  /* ---------- memoria ---------- */
+  .memoria{
+    margin-top:18px;
+    border-top:1px solid var(--gris-200);
+    padding-top:16px;
+  }
+  .memoria-cabecera{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:8px;
+  }
+  .memoria-cabecera span.label{
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--gris-600);
+  }
+  .memoria-total{
+    font-family:var(--mono);
+    font-size:20px;
+    font-weight:800;
+    color:var(--azul-500);
+    text-align:right;
+    margin-bottom:10px;
+  }
+  .memoria-botones{
+    display:flex;
+    gap:8px;
+  }
+  button.mem{
+    flex:1;
+    padding:10px 4px;
+    border-radius:9px;
+    border:1.5px solid var(--gris-200);
+    background:#fff;
+    color:var(--azul-950);
+    font-family:var(--mono);
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  button.mem:active{ background:var(--gris-100); }
+  button.mem.mc{ color:var(--warn); border-color:#f0d9d2; }
+
+  footer{
+    text-align:center;
+    margin-top:22px;
+    font-size:11px;
+    color:var(--gris-400);
+    font-family:var(--mono);
+  }
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Herramienta de campo</div>
+    <h1>📐 Calculadora de Obra</h1>
+  </header>
+
+  <div class="tabs">
+    <button class="tab activo" data-tab="cilindro" onclick="cambiarTab('cilindro')">Cilindro</button>
+    <button class="tab" data-tab="cubo" onclick="cambiarTab('cubo')">Cubo</button>
+    <button class="tab" data-tab="escuadras" onclick="cambiarTab('escuadras')">Escuadras</button>
+  </div>
+
+  <!-- ===================== CILINDRO ===================== -->
+  <div class="card activo" id="card-cilindro">
+    <div class="card-title">
+      <h2>Volumen de cilindro</h2>
+    </div>
+
+    <label>Diámetro (m)</label>
+    <input type="number" id="c-diametro" step="0.01" inputmode="decimal" placeholder="Ej: 1.20">
+
+    <label>Altura (m)</label>
+    <input type="number" id="c-altura" step="0.01" inputmode="decimal" placeholder="Ej: 4.60">
+
+    <div class="botones">
+      <button class="accion calcular" onclick="calcularCilindro()">Calcular</button>
+      <button class="accion limpiar" onclick="limpiarCilindro()">Limpiar</button>
+    </div>
+
+    <div class="resultado">
+      <div class="valor" id="c-resultado">—</div>
+      <div class="formula" id="c-formula">V = π × r² × h</div>
+    </div>
+    <div class="error" id="c-error"></div>
+
+    <div class="memoria">
+      <div class="memoria-cabecera"><span class="label">Memoria acumulada</span></div>
+      <div class="memoria-total" id="c-memoria-total">0.000 m³</div>
+      <div class="memoria-botones">
+        <button class="mem" onclick="memSumar('cilindro')">M+</button>
+        <button class="mem" onclick="memRestar('cilindro')">M−</button>
+        <button class="mem mc" onclick="memBorrar('cilindro')">MC</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CUBO / PARALELEPÍPEDO ===================== -->
+  <div class="card" id="card-cubo">
+    <div class="card-title">
+      <h2>Volumen rectangular</h2>
+    </div>
+
+    <div class="fila-doble">
+      <div>
+        <label>Ancho (m)</label>
+        <input type="number" id="b-ancho" step="0.01" inputmode="decimal" placeholder="0.30">
+      </div>
+      <div>
+        <label>Largo (m)</label>
+        <input type="number" id="b-largo" step="0.01" inputmode="decimal" placeholder="5.00">
+      </div>
+    </div>
+
+    <label>Alto (m)</label>
+    <input type="number" id="b-alto" step="0.01" inputmode="decimal" placeholder="0.40">
+
+    <div class="botones">
+      <button class="accion calcular" onclick="calcularCubo()">Calcular</button>
+      <button class="accion limpiar" onclick="limpiarCubo()">Limpiar</button>
+    </div>
+
+    <div class="resultado">
+      <div class="valor" id="b-resultado">—</div>
+      <div class="formula" id="b-formula">V = ancho × largo × alto</div>
+    </div>
+    <div class="error" id="b-error"></div>
+
+    <div class="memoria">
+      <div class="memoria-cabecera"><span class="label">Memoria acumulada</span></div>
+      <div class="memoria-total" id="b-memoria-total">0.000 m³</div>
+      <div class="memoria-botones">
+        <button class="mem" onclick="memSumar('cubo')">M+</button>
+        <button class="mem" onclick="memRestar('cubo')">M−</button>
+        <button class="mem mc" onclick="memBorrar('cubo')">MC</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ESCUADRAS ===================== -->
+  <div class="card" id="card-escuadras">
+    <div class="card-title">
+      <h2>Escuadras</h2>
+    </div>
+
+    <div class="unidades" id="e-unidades">
+      <button class="activo" data-u="cm" onclick="cambiarUnidad('cm')">cm</button>
+      <button data-u="m" onclick="cambiarUnidad('m')">m</button>
+    </div>
+
+    <div class="fila-doble">
+      <div>
+        <label>Cateto A</label>
+        <input type="number" id="e-cateto-a" step="0.1" inputmode="decimal" placeholder="Ej: 300">
+      </div>
+      <div>
+        <label>Cateto B</label>
+        <input type="number" id="e-cateto-b" step="0.1" inputmode="decimal" placeholder="Ej: 400">
+      </div>
+    </div>
+
+    <div class="botones">
+      <button class="accion calcular" onclick="calcularEscuadra()">Calcular</button>
+      <button class="accion limpiar" onclick="limpiarEscuadra()">Limpiar</button>
+    </div>
+
+    <div class="resultado">
+      <div class="valor" id="e-resultado">—</div>
+      <div class="formula" id="e-formula">Hipotenusa = √(A² + B²)</div>
+    </div>
+    <div class="error" id="e-error"></div>
+  </div>
+
+  <footer>hecho para el bolsillo · uso en obra</footer>
+
+</div>
+
+<script>
+
+  /* ============ NAVEGACIÓN ENTRE MÓDULOS ============ */
+  function cambiarTab(nombre){
+    document.querySelectorAll('.tab').forEach(t=>{
+      t.classList.toggle('activo', t.dataset.tab === nombre);
+    });
+    document.querySelectorAll('.card').forEach(c=>{
+      c.classList.toggle('activo', c.id === 'card-' + nombre);
+    });
+  }
+
+  /* ============ MEMORIA (persistente en el dispositivo) ============ */
+  function leerMemoria(modulo){
+    var v = parseFloat(localStorage.getItem('mem_' + modulo));
+    return isNaN(v) ? 0 : v;
+  }
+  function guardarMemoria(modulo, valor){
+    localStorage.setItem('mem_' + modulo, valor);
+    pintarMemoria(modulo);
+  }
+  function pintarMemoria(modulo){
+    var total = leerMemoria(modulo);
+    var el = document.getElementById(
+      (modulo === 'cilindro' ? 'c' : 'b') + '-memoria-total'
+    );
+    el.textContent = total.toFixed(3) + ' m³';
+  }
+  function ultimoResultado(modulo){
+    var id = (modulo === 'cilindro' ? 'c' : 'b') + '-resultado';
+    var txt = document.getElementById(id).textContent;
+    var n = parseFloat(txt);
+    return isNaN(n) ? null : n;
+  }
+  function memSumar(modulo){
+    var n = ultimoResultado(modulo);
+    if(n === null) return;
+    guardarMemoria(modulo, leerMemoria(modulo) + n);
+  }
+  function memRestar(modulo){
+    var n = ultimoResultado(modulo);
+    if(n === null) return;
+    guardarMemoria(modulo, leerMemoria(modulo) - n);
+  }
+  function memBorrar(modulo){
+    guardarMemoria(modulo, 0);
+  }
+
+  /* ============ CILINDRO ============ */
+  function calcularCilindro(){
+    var diametro = Number(document.getElementById('c-diametro').value);
+    var altura = Number(document.getElementById('c-altura').value);
+    document.getElementById('c-error').textContent = '';
+    document.getElementById('c-resultado').textContent = '—';
+
+    if(diametro <= 0 || altura <= 0 || !diametro || !altura){
+      document.getElementById('c-error').textContent = '⚠️ Ingresa valores mayores que cero.';
+      return;
+    }
+    var radio = diametro / 2;
+    var volumen = Math.PI * radio * radio * altura;
+    document.getElementById('c-resultado').textContent = volumen.toFixed(3) + ' m³';
+  }
+  function limpiarCilindro(){
+    document.getElementById('c-diametro').value = '';
+    document.getElementById('c-altura').value = '';
+    document.getElementById('c-resultado').textContent = '—';
+    document.getElementById('c-error').textContent = '';
+  }
+
+  /* ============ CUBO / RECTANGULAR ============ */
+  function calcularCubo(){
+    var ancho = Number(document.getElementById('b-ancho').value);
+    var largo = Number(document.getElementById('b-largo').value);
+    var alto = Number(document.getElementById('b-alto').value);
+    document.getElementById('b-error').textContent = '';
+    document.getElementById('b-resultado').textContent = '—';
+
+    if(ancho <= 0 || largo <= 0 || alto <= 0 || !ancho || !largo || !alto){
+      document.getElementById('b-error').textContent = '⚠️ Ingresa valores mayores que cero.';
+      return;
+    }
+    var volumen = ancho * largo * alto;
+    document.getElementById('b-resultado').textContent = volumen.toFixed(3) + ' m³';
+  }
+  function limpiarCubo(){
+    document.getElementById('b-ancho').value = '';
+    document.getElementById('b-largo').value = '';
+    document.getElementById('b-alto').value = '';
+    document.getElementById('b-resultado').textContent = '—';
+    document.getElementById('b-error').textContent = '';
+  }
+
+  /* ============ ESCUADRAS ============ */
+  var unidadActual = 'cm';
+  function cambiarUnidad(u){
+    unidadActual = u;
+    document.querySelectorAll('#e-unidades button').forEach(function(btn){
+      btn.classList.toggle('activo', btn.dataset.u === u);
+    });
+    // vuelve a calcular si ya hay valores cargados
+    if(document.getElementById('e-cateto-a').value && document.getElementById('e-cateto-b').value){
+      calcularEscuadra();
+    }
+  }
+  function calcularEscuadra(){
+    var a = Number(document.getElementById('e-cateto-a').value);
+    var b = Number(document.getElementById('e-cateto-b').value);
+    document.getElementById('e-error').textContent = '';
+    document.getElementById('e-resultado').textContent = '—';
+
+    if(a <= 0 || b <= 0 || !a || !b){
+      document.getElementById('e-error').textContent = '⚠️ Ingresa los dos catetos.';
+      return;
+    }
+    var hip = Math.sqrt(a*a + b*b);
+    var decimales = (unidadActual === 'cm') ? 1 : 3;
+    document.getElementById('e-resultado').textContent = hip.toFixed(decimales) + ' ' + unidadActual;
+  }
+  function limpiarEscuadra(){
+    document.getElementById('e-cateto-a').value = '';
+    document.getElementById('e-cateto-b').value = '';
+    document.getElementById('e-resultado').textContent = '—';
+    document.getElementById('e-error').textContent = '';
+  }
+
+  /* ============ INICIALIZAR MEMORIA AL CARGAR ============ */
+  pintarMemoria('cilindro');
+  pintarMemoria('cubo');
+
+</script>
+
+</body>
+</html>
