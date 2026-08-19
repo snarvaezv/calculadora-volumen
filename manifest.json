@@ -1,0 +1,31 @@
+{
+  "name": "Calculadora de Obra",
+  "short_name": "Vol. Obra",
+  "description": "Calculadora de campo para volúmenes de cilindros, elementos rectangulares y cálculo de escuadras (hipotenusa).",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e2233",
+  "theme_color": "#0e2233",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
