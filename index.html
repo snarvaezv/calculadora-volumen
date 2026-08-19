@@ -88,9 +88,9 @@
     flex:1;
     border:none;
     background:transparent;
-    padding:10px 4px;
+    padding:10px 2px;
     border-radius:9px;
-    font-size:13px;
+    font-size:12px;
     font-weight:700;
     color:var(--gris-600);
     cursor:pointer;
@@ -285,6 +285,65 @@
   button.mem:active{ background:var(--gris-100); }
   button.mem.mc{ color:var(--warn); border-color:#f0d9d2; }
 
+  /* ---------- calculadora básica ---------- */
+  .pantalla-basica{
+    background:var(--azul-950);
+    border-radius:14px;
+    padding:18px 16px;
+    text-align:right;
+    margin-bottom:16px;
+  }
+  .pantalla-basica .previa{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--azul-300);
+    min-height:16px;
+    word-break:break-all;
+  }
+  .pantalla-basica .actual{
+    font-family:var(--mono);
+    font-size:34px;
+    font-weight:800;
+    color:#fff;
+    margin-top:4px;
+    word-break:break-all;
+    line-height:1.1;
+  }
+  .teclado{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:8px;
+  }
+  .tecla{
+    border:none;
+    border-radius:10px;
+    padding:16px 4px;
+    font-size:18px;
+    font-weight:700;
+    font-family:var(--mono);
+    cursor:pointer;
+    background:var(--gris-100);
+    color:var(--azul-950);
+  }
+  .tecla:active{ background:var(--gris-200); }
+  .tecla.operador{
+    background:var(--azul-500);
+    color:#fff;
+  }
+  .tecla.operador:active{ background:var(--azul-700); }
+  .tecla.igual{
+    background:var(--azul-950);
+    color:#fff;
+    grid-row:span 2;
+  }
+  .tecla.igual:active{ background:var(--azul-800); }
+  .tecla.funcion{
+    background:var(--gris-400);
+    color:#fff;
+  }
+  .tecla.funcion:active{ background:var(--gris-600); }
+  .tecla.cero{ grid-column:span 2; }
+
   footer{
     text-align:center;
     margin-top:22px;
@@ -308,6 +367,7 @@
     <button class="tab activo" data-tab="cilindro" onclick="cambiarTab('cilindro')">Cilindro</button>
     <button class="tab" data-tab="cubo" onclick="cambiarTab('cubo')">Cubo</button>
     <button class="tab" data-tab="escuadras" onclick="cambiarTab('escuadras')">Escuadras</button>
+    <button class="tab" data-tab="basica" onclick="cambiarTab('basica')">Básica</button>
   </div>
 
   <!-- ===================== CILINDRO ===================== -->
@@ -418,6 +478,45 @@
       <div class="formula" id="e-formula">Hipotenusa = √(A² + B²)</div>
     </div>
     <div class="error" id="e-error"></div>
+  </div>
+
+  <!-- ===================== CALCULADORA BÁSICA ===================== -->
+  <div class="card" id="card-basica">
+    <div class="card-title">
+      <h2>Calculadora básica</h2>
+    </div>
+
+    <div class="pantalla-basica">
+      <div class="previa" id="k-previa">&nbsp;</div>
+      <div class="actual" id="k-actual">0</div>
+    </div>
+
+    <div class="teclado">
+      <button class="tecla funcion" onclick="kBorrarTodo()">AC</button>
+      <button class="tecla funcion" onclick="kBorrarUltimo()">⌫</button>
+      <button class="tecla funcion" onclick="kSigno()">±</button>
+      <button class="tecla operador" onclick="kOperador('÷')">÷</button>
+
+      <button class="tecla" onclick="kDigito('7')">7</button>
+      <button class="tecla" onclick="kDigito('8')">8</button>
+      <button class="tecla" onclick="kDigito('9')">9</button>
+      <button class="tecla operador" onclick="kOperador('×')">×</button>
+
+      <button class="tecla" onclick="kDigito('4')">4</button>
+      <button class="tecla" onclick="kDigito('5')">5</button>
+      <button class="tecla" onclick="kDigito('6')">6</button>
+      <button class="tecla operador" onclick="kOperador('−')">−</button>
+
+      <button class="tecla" onclick="kDigito('1')">1</button>
+      <button class="tecla" onclick="kDigito('2')">2</button>
+      <button class="tecla" onclick="kDigito('3')">3</button>
+      <button class="tecla operador" onclick="kOperador('+')">+</button>
+
+      <button class="tecla cero" onclick="kDigito('0')">0</button>
+      <button class="tecla" onclick="kDecimal()">,</button>
+      <button class="tecla igual" onclick="kIgual()">=</button>
+    </div>
+    <div class="error" id="k-error"></div>
   </div>
 
   <footer>hecho para el bolsillo · uso en obra</footer>
@@ -548,6 +647,132 @@
     document.getElementById('e-cateto-b').value = '';
     document.getElementById('e-resultado').textContent = '—';
     document.getElementById('e-error').textContent = '';
+  }
+
+  /* ============ CALCULADORA BÁSICA ============ */
+  var kActual = '0';
+  var kAnterior = null;
+  var kOperadorActual = null;
+  var kResultadoMostrado = false;
+
+  function kFormatear(str){
+    // separador decimal visual en coma, sin tocar la lógica interna (usa punto)
+    return str.replace('.', ',');
+  }
+
+  function kRender(){
+    document.getElementById('k-error').textContent = '';
+    document.getElementById('k-actual').textContent = kFormatear(kActual);
+    var previa = '';
+    if(kAnterior !== null && kOperadorActual !== null){
+      previa = kFormatear(kAnterior) + ' ' + kOperadorActual;
+    }
+    document.getElementById('k-previa').innerHTML = previa || '&nbsp;';
+  }
+
+  function kDigito(d){
+    if(kResultadoMostrado){
+      kActual = d;
+      kResultadoMostrado = false;
+      kRender();
+      return;
+    }
+    if(kActual === '0'){
+      kActual = d;
+    } else if(kActual.replace('-','').length < 14){
+      kActual += d;
+    }
+    kRender();
+  }
+
+  function kDecimal(){
+    if(kResultadoMostrado){
+      kActual = '0';
+      kResultadoMostrado = false;
+    }
+    if(kActual.indexOf('.') === -1){
+      kActual += '.';
+    }
+    kRender();
+  }
+
+  function kSigno(){
+    if(kActual === '0') return;
+    kActual = kActual.startsWith('-') ? kActual.slice(1) : '-' + kActual;
+    kRender();
+  }
+
+  function kBorrarUltimo(){
+    if(kResultadoMostrado){
+      kBorrarTodo();
+      return;
+    }
+    if(kActual.length <= 1 || (kActual.length === 2 && kActual.startsWith('-'))){
+      kActual = '0';
+    } else {
+      kActual = kActual.slice(0, -1);
+    }
+    kRender();
+  }
+
+  function kBorrarTodo(){
+    kActual = '0';
+    kAnterior = null;
+    kOperadorActual = null;
+    kResultadoMostrado = false;
+    kRender();
+  }
+
+  function kCalcular(a, b, op){
+    a = parseFloat(a);
+    b = parseFloat(b);
+    switch(op){
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷':
+        if(b === 0) return null;
+        return a / b;
+    }
+    return null;
+  }
+
+  function kOperador(op){
+    if(kOperadorActual !== null && kAnterior !== null && !kResultadoMostrado){
+      var r = kCalcular(kAnterior, kActual, kOperadorActual);
+      if(r === null){
+        document.getElementById('k-error').textContent = '⚠️ No se puede dividir entre cero.';
+        return;
+      }
+      kAnterior = kRedondear(r);
+      kActual = kAnterior;
+    } else {
+      kAnterior = kActual;
+    }
+    kOperadorActual = op;
+    kResultadoMostrado = true; // el próximo dígito inicia un número nuevo
+    kRender();
+  }
+
+  function kRedondear(n){
+    // hasta 8 decimales, sin ceros ni punto sobrantes
+    var s = n.toFixed(8).replace(/0+$/,'').replace(/\.$/,'');
+    if(s === '' || s === '-0') s = '0';
+    return s;
+  }
+
+  function kIgual(){
+    if(kOperadorActual === null || kAnterior === null) return;
+    var r = kCalcular(kAnterior, kActual, kOperadorActual);
+    if(r === null){
+      document.getElementById('k-error').textContent = '⚠️ No se puede dividir entre cero.';
+      return;
+    }
+    kActual = kRedondear(r);
+    kAnterior = null;
+    kOperadorActual = null;
+    kResultadoMostrado = true;
+    kRender();
   }
 
   /* ============ INICIALIZAR MEMORIA AL CARGAR ============ */
